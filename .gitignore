@@ -1,0 +1,4 @@
+.ropeproject
+*.pyc
+*.egg-info*
+.eggs
