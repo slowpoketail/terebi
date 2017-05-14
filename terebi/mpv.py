@@ -156,3 +156,13 @@ class Mpv(Thread):
         if not level in LogLevel:
             raise ValueError("{} is not a valid log level.".format(level))
         return self.send_command("request_log_messages", level.value)
+
+    def play(self, path_or_url, unpause=True):
+        """Play a given file or URL.
+
+        By default, this will immediately start playback of the loaded file.
+        To disable this, pass unpause=False.
+        """
+        ret = self.send_command("loadfile", path_or_url)
+        self.set_property("pause", not unpause)
+        return ret
