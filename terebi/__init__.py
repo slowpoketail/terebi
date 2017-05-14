@@ -14,4 +14,4 @@ JSON IPC, allowing full control over the player via its UNIX socket.
 
 """
 
-from mpv import LogLevel, Mpv
+from .mpv import LogLevel, Mpv
