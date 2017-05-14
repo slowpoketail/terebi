@@ -107,17 +107,20 @@ class Mpv(Thread):
         """Get the system time (get_time_us command)."""
         return self.send_command(self, "get_time_us")
 
-    def set_property(self, name, value):
-        """Set the value of a property."""
-        return self.send_command("set_property", name, value)
+    def set_property(self, name, value, string=False):
+        """Set the value of a property.
 
-    def get_property(self, name, always_string=False):
+        If the string argument is set to True, this will act like mpv's
+        set_property_string command and always expect a string as the value.
+        """
+        cmd = "set_property_string" if string else "set_property"
+        return self.send_command(cmd, name, value)
+
+    def get_property(self, name, string=False):
         """Get the value of a property.
 
-        If alway_string is set to True, this will act like mpv's
+        If the string argument is set to True, this will act like mpv's
         get_property_string command and always return a string.
         """
-        if always_string:
-            return self.send_command("get_property_string", name)
-        else:
-            return self.send_command("get_property", name)
+        cmd = "get_property_string" if string else "get_property"
+        return self.send_command(cmd, name)
