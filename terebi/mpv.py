@@ -106,7 +106,7 @@ class Mpv(Thread):
     def get_event_nowait(self):
         return self.get_event(block=False)
 
-    def stop(self):
+    def stop_daemon(self):
         """Stop the daemon."""
         self._keep_going = False
         # we send a command to get the loop to terminate
