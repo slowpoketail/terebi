@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# terebi - a python interface to mpv
+#
+# Author: slowpoke <mail+git@slowpoke.io>
+#
+# This program is Free Software under the non-terms
+# of the Anti-License. Do whatever the fuck you want.
 
-#from multiprocessing_on_dill import Queue
-#from multiprocessing import Queue
 from queue import Queue
 
 
@@ -58,6 +62,8 @@ class Promise:
 
         Returns a tuple containing the activated promise and the function to
         fulfill it.
+
+        Available at the module level as new() for convenience.
 
         """
         p = cls()
