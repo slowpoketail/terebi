@@ -15,6 +15,19 @@ from . import promise
 import socket
 import json
 
+from enum import Enum
+
+
+class LogLevel(Enum):
+    NONE = 'none'
+    FATAL = 'fatal'
+    ERROR = 'error'
+    WARN = 'warn'
+    INFO = 'info'
+    V = 'v'
+    DEBUG = 'debug'
+    TRACE = 'trace'
+
 
 class Mpv(Thread):
 
@@ -132,3 +145,14 @@ class Mpv(Thread):
     def disable_event(self, name):
         """Disable the named event. If name is 'all', disable all events."""
         return self.send_command("disable_event", name)
+
+    def request_log_messages(self, level):
+        """Enable mpv log messages.
+
+        Log levels are defined in the LogLevels enum.
+
+        Log messages will be send as events.
+        """
+        if not level in LogLevel:
+            raise ValueError("{} is not a valid log level.".format(level))
+        return self.send_command("request_log_messages", level.value)
