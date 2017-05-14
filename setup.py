@@ -6,7 +6,7 @@ from setuptools import setup
 setup(
     name='terebi',
     description='a python interface to mpv',
-    version="0.1",
+    version="0.1.1",
     author='slowpoke',
     author_email='mail+pypi@slowpoke.io',
     url='https://github.com/slowpoketail/terebi',
