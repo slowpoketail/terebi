@@ -124,3 +124,11 @@ class Mpv(Thread):
         """
         cmd = "get_property_string" if string else "get_property"
         return self.send_command(cmd, name)
+
+    def enable_event(self, name):
+        """Enable the named event. If name is 'all', enable all events."""
+        return self.send_command("enable_event", name)
+
+    def disable_event(self, name):
+        """Disable the named event. If name is 'all', disable all events."""
+        return self.send_command("disable_event", name)
