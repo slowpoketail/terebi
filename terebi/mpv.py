@@ -166,3 +166,15 @@ class Mpv(Thread):
         ret = self.send_command("loadfile", path_or_url)
         self.set_property("pause", not unpause)
         return ret
+
+    def pause(self):
+        """Pause playback."""
+        return self.set_property("pause", True)
+
+    def unpause(self):
+        """Resume playback."""
+        return self.set_property("pause", False)
+
+    def stop(self):
+        """Stop playback."""
+        return self.send_command("stop")
