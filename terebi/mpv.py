@@ -99,3 +99,18 @@ class Mpv(Thread):
         self._keep_going = False
         # we send a command to get the loop to terminate
         self.send_command("get_property", "pause")
+
+    def set_property(self, name, value):
+        """Set the value of a property."""
+        return self.send_command("set_property", name, value)
+
+    def get_property(self, name, always_string=False):
+        """Get the value of a property.
+
+        If alway_string is set to True, this will act like mpv's
+        get_property_string command and always return a string.
+        """
+        if always_string:
+            return self.send_command("get_property_string", name)
+        else:
+            return self.send_command("get_property", name)
