@@ -103,6 +103,10 @@ class Mpv(Thread):
         """Return the client name."""
         return self.send_command(self, "client_name")
 
+    def get_time(self):
+        """Get the system time (get_time_us command)."""
+        return self.send_command(self, "get_time_us")
+
     def set_property(self, name, value):
         """Set the value of a property."""
         return self.send_command("set_property", name, value)
