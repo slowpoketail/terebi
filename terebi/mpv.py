@@ -22,7 +22,6 @@ class Mpv(Thread):
 
     """
 
-
     def __init__(self, mpv_sock_path):
         super().__init__()
         self._mpv_sock_path = mpv_sock_path
@@ -99,6 +98,10 @@ class Mpv(Thread):
         self._keep_going = False
         # we send a command to get the loop to terminate
         self.send_command("get_property", "pause")
+
+    def client_name(self):
+        """Return the client name."""
+        return self.send_command(self, "client_name")
 
     def set_property(self, name, value):
         """Set the value of a property."""
