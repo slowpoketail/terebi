@@ -14,9 +14,15 @@ from . import promise
 
 import socket
 import json
+import os
 
 from enum import Enum
 
+from subprocess import Popen
+
+import selectors
+
+from errno import ECONNREFUSED
 
 class LogLevel(Enum):
     NONE = 'none'
@@ -40,8 +46,11 @@ class Mpv(Thread):
         self._mpv_sock_path = mpv_sock_path
         self._events = Queue()
         self._awaiting_reply = Queue()
-        self._mpvsock = self._make_socket()
         self._keep_going = True
+        self._mpv_started = False
+        self._selector = selectors.DefaultSelector()
+        self._partial_line = ""
+        self._connecting = False
 
     @staticmethod
     def _make_socket():
@@ -70,6 +79,54 @@ class Mpv(Thread):
         else:
             pass
 
+    def _start_mpv(self, path_or_url):
+        with open(os.devnull) as devnull:
+            Popen(["mpv", path_or_url],
+                   stdin=devnull, stdout=devnull, stderr=devnull)
+        # recreate socket
+        print("making new socket")
+        self._mpvsock = self._make_socket()
+
+        # register socket to selector
+        def recv(conn, mask):
+            data = self._partial_line + conn.recv(4096).decode()
+            if not data:
+                # mpv was most likely closed
+                print("connection to mpv lost")
+                self._selector.unregister(conn)
+                conn.close()
+                self._partial_line = ""
+                self._mpv_started = False
+                return
+            lines = data.split("\n")
+            for line in lines[:-1]:
+                self._read_json(line)
+            self._partial_line = lines[-1]
+
+        print("socket registered")
+        self._selector.register(self._mpvsock,
+                                selectors.EVENT_READ + selectors.EVENT_WRITE,
+                                recv)
+        # wait until socket connection is available
+        print("waiting for connection to socket")
+        self._connecting = True
+        while True:
+            try:
+                self._connect_socket()
+            except OSError as e:
+                if e.errno == ECONNREFUSED:
+                    print("derp")
+                    continue
+                else:
+                    raise
+            break
+        self._connecting = False
+        self._selector.select()
+        self._mpv_started = True
+        if not self.is_alive():
+            print("starting thread")
+            self.start()
+
     def send_command(self, cmd_name, *params):
         """Send a command to mpv.
 
@@ -86,19 +143,14 @@ class Mpv(Thread):
         return reply_promise
 
     def run(self):
-        self._connect_socket()
-        # temporary storage for partial lines
-        partial_line = ""
         while self._keep_going:
-            data = partial_line + self._mpvsock.recv(4096).decode()
-            if data == "":
-                break
-            lines = data.split("\n")
-            for line in lines[:-1]:
-                self._read_json(line)
-
-            partial_line = lines[-1]
-        self._mpvsock.close()
+            if self._connecting:
+                print("skipping")
+                continue
+            events = self._selector.select()
+            for key, mask in events:
+                f = key.data
+                f(key.fileobj, mask)
 
     def get_event(self, block=True, timeout=None):
         return self._events.get(block, timeout)
@@ -109,8 +161,6 @@ class Mpv(Thread):
     def stop_daemon(self):
         """Stop the daemon."""
         self._keep_going = False
-        # we send a command to get the loop to terminate
-        self.send_command("get_property", "pause")
 
     def client_name(self):
         """Return the client name."""
@@ -163,6 +213,8 @@ class Mpv(Thread):
         By default, this will immediately start playback of the loaded file.
         To disable this, pass unpause=False.
         """
+        if not self._mpv_started:
+            self._start_mpv(path_or_url)
         ret = self.send_command("loadfile", path_or_url)
         self.set_property("pause", not unpause)
         return ret
